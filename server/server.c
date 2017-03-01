@@ -8,6 +8,7 @@
 #include<sys/socket.h>
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
+#include <fcntl.h>
 
 int main(int argc , char *argv[])
 {
@@ -43,6 +44,10 @@ int main(int argc , char *argv[])
         return 1;
     }
     puts("Connection accepted");
+
+
+
+
     //Receive pass
     bzero(client_message, 2000);
     while( (read_size = recv(client_sock , client_message , 2000, 0)) > 0 )
@@ -62,6 +67,11 @@ int main(int argc , char *argv[])
             bzero(client_message, 2000);
         }
     }
+
+
+
+
+
     //fork le gstreamer de la mort
     int pid;
     if ((pid = fork()) < 0)
@@ -75,13 +85,34 @@ int main(int argc , char *argv[])
         system("gst-launch-1.0 rpicamsrc bitrate=1000000 ! 'video/x-h264,width=512,height=288' ! h264parse ! queue ! rtph264pay config-interval=1 pt=96 ! gdppay ! udpsink host=169.254.199.68 port=5000");
         exit (0);
     }
+
+
+
     //Receive a message from client
-    while ((read_size = recv(client_sock , client_message , 2000, 0)) > 0)
+    /*while ((read_size = recv(client_sock , client_message , 2000, 0)) > 0)
     {
         write(client_sock , client_message, strlen(client_message));
         puts(client_message);
         bzero(client_message, 2000);
-    }
+    }*/
+    int fd;
+
+	fd = open("/dev/pi-blaster", O_WRONLY);
+	while( (read_size = recv(client_sock , client_message , 9 , 0)) > 0 )
+	{
+		client_message[read_size] = '\0';
+		strcat(client_message, "\n");
+		write(fd, client_message, strlen(client_message));
+        write(1, client_message, strlen(client_message));
+	}
+	close(fd);
+
+
+
+
+
+
+    //fin du pilotage
     if(read_size == 0)
     {
         puts("Client disconnected");
