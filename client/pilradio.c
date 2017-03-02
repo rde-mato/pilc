@@ -1,6 +1,7 @@
 ////////////////////////////////////// Ce fichier est destine au mixing channels
 /////////////////// Il permet de regler les Deadzones, Trims, Ranges, et Reverse
 # include "pilradio.h"
+# include <stdio.h>
 
 int     waychan(unsigned char chanrev, unsigned char n)
 {
@@ -51,6 +52,12 @@ void    jstoppm(t_radio *dtppm, tjs_data *jsdata, tjs_event *jse)
         if (PPMCHAN(JSEN) < 60)
             PPMCHAN(JSEN) = 60;
     }
+}
+
+void    mix(t_radio *dtppm)
+{
+    PPMCHAN(2) = (PPMCHAN(2) - PPMCHAN(5)) / 2 + PPMOFFS(2);
+    printf("%d\n", PPMCHAN(2));
 }
 
 int     trim(tjs_event *jse, tjs_data *jsdata, t_radio *dtppm)

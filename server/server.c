@@ -82,7 +82,7 @@ int main(int argc , char *argv[])
     else if (!pid)
     {
         sleep(3);
-        system("gst-launch-1.0 rpicamsrc bitrate=1000000 ! 'video/x-h264,width=512,height=288' ! h264parse ! queue ! rtph264pay config-interval=1 pt=96 ! gdppay ! udpsink host=169.254.199.68 port=5000");
+        system("gst-launch-1.0 rpicamsrc bitrate=1000000 ! 'video/x-h264,width=512,height=288' ! h264parse ! queue ! rtph264pay config-interval=1 pt=96 ! gdppay ! udpsink host=192.168.42.2 port=5000");
         exit (0);
     }
 

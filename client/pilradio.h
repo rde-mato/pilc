@@ -35,6 +35,7 @@ typedef struct      s_radio
 void    initdtppm(t_radio *dtppm);
 int     waychan(unsigned char chanrev, unsigned char n);
 void    jstoppm(t_radio *dtppm, tjs_data *jsdata, tjs_event *jse);
+void    mix(t_radio *dtppm);
 int     trim(tjs_event *jse, tjs_data *jsdata, t_radio *dtppm);
 int     range(tjs_event *jse, tjs_data *jsdata, t_radio *dtppm);
 int     reverse(tjs_event *jse, tjs_data *jsdata, t_radio *dtppm);

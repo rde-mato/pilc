@@ -9,23 +9,45 @@ int         jsfd;
 int         sock = 0;
 tjs_data    jsdata;
 t_radio     dtppm;
+tjs_event       jse;
+
+char *tab[11];
+
+void inittab()
+{
+    //4,17,18,27,21,22,23,24,25
+    tab[0] = strdup("17=0.%03d");
+    tab[1] = strdup("18=0.%03d");
+    tab[2] = strdup("27=0.%03d");
+    tab[3] = strdup("21=0.%03d");
+    tab[4] = strdup("22=0.%03d");
+    tab[5] = strdup("23=0.%03d");
+    tab[6] = strdup("24=0.%03d");
+    tab[7] = strdup("25=0.%03d");
+    tab[8] = strdup("4=0.%03d");
+    tab[9] = strdup("4=0.%03d");
+    tab[10] = strdup("4=0.%03d");
+    tab[11] = strdup("4=0.%03d");
+}
+
 
 void    *readcontrol(void * arg)
 {
-    tjs_event       jse;
+    //tjs_event       jse;
 
     while (1)
     {
         pthread_mutex_lock (&my_mutex);
-    ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
         if (readjsevent(&jse))
         {
             if((jsdata.buttons & 0x3f) == 0x3f) // Appuis sur A B X Y LB RB pour quiter
                 exit (0);
             writejsdata(&jse, &jsdata);
             jstoppm(&dtppm, &jsdata, &jse);
+            mix(&dtppm);
         }
-    ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
         pthread_mutex_unlock (&my_mutex);
     }
     //pthread_exit (0);
@@ -33,19 +55,24 @@ void    *readcontrol(void * arg)
 
 void    *sendcontrol(void * arg)
 {
-    tjs_event       jse;
+    //tjs_event       jse;
+    int i;
 
     while (1)
     {
         pthread_mutex_lock (&my_mutex);
-    ////////////////////////////////////////////////////////////////////////////////
-        sprintf(dtppm.chantosend[2], "17=0.%03d", dtppm.chantmp[2]);
-        if (dtppm.chan[2] != dtppm.chantmp[2])
-                if (send(sock, dtppm.chantosend[2], 9 , 0) < 0)
-                    //error++;
-                    puts("error");
-        dtppm.chantmp[2] = dtppm.chan[2];
-    ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+        i = -1;
+        while (++i < 5)
+        {
+            sprintf(dtppm.chantosend[i], tab[i], dtppm.chantmp[i]);
+            if (dtppm.chan[i] != dtppm.chantmp[i])
+                    if (send(sock, dtppm.chantosend[i], 9 , 0) < 0)
+                        //error++;
+                        puts("error");
+            dtppm.chantmp[i] = dtppm.chan[i];
+        }
+////////////////////////////////////////////////////////////////////////////////
         pthread_mutex_unlock (&my_mutex);
     }
     //pthread_exit (0);
@@ -60,8 +87,26 @@ int     main(void)
     jsfd = openjoystick();
     initjsdata(&jsdata);
     initdtppm(&dtppm);
+    inittab();
     sock = initsocket(/*"192.168.42.1"*/"127.0.0.1");
     authentification(sock);
+
+
+
+    int pid;
+    if ((pid = fork()) < 0)
+    {
+        puts("fils de fork !");
+        exit (0);
+    }
+    else if (!pid)
+    {
+        system("gst-launch-1.0 udpsrc port=5000 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false");
+        exit (0);
+    }
+
+
+
     pthread_mutex_init(&my_mutex, NULL);
     if (pthread_create(&th1, NULL, readcontrol, NULL) < 0)
     {
