@@ -18,10 +18,10 @@ void inittab()
     //4,17,18,27,21,22,23,24,25
     tab[0] = strdup("17=0.%03d");
     tab[1] = strdup("18=0.%03d");
-    tab[2] = strdup("27=0.%03d");
-    tab[3] = strdup("21=0.%03d");
+    tab[2] = strdup("00=0.%03d");
+    tab[3] = strdup("23=0.%03d");
     tab[4] = strdup("22=0.%03d");
-    tab[5] = strdup("23=0.%03d");
+    tab[5] = strdup("00=0.%03d");
     tab[6] = strdup("24=0.%03d");
     tab[7] = strdup("25=0.%03d");
     tab[8] = strdup("4=0.%03d");
@@ -31,7 +31,7 @@ void inittab()
 }
 
 
-void    *readcontrol(void * arg)
+void    *readcontrol(void *arg)
 {
     //tjs_event       jse;
 
@@ -53,7 +53,7 @@ void    *readcontrol(void * arg)
     //pthread_exit (0);
 }
 
-void    *sendcontrol(void * arg)
+void    *sendcontrol(void *arg)
 {
     //tjs_event       jse;
     int i;
@@ -65,6 +65,8 @@ void    *sendcontrol(void * arg)
         i = -1;
         while (++i < 5)
         {
+            if (i == 1)
+                i = i + 2;
             sprintf(dtppm.chantosend[i], tab[i], dtppm.chantmp[i]);
             if (dtppm.chan[i] != dtppm.chantmp[i])
                     if (send(sock, dtppm.chantosend[i], 9 , 0) < 0)
@@ -72,6 +74,12 @@ void    *sendcontrol(void * arg)
                         puts("error");
             dtppm.chantmp[i] = dtppm.chan[i];
         }
+        sprintf(dtppm.chantosend[i], "18=0.%03d", dtppm.mix);
+        if (dtppm.mix != dtppm.mixtmp)
+                if (send(sock, dtppm.chantosend[i], 9 , 0) < 0)
+                    //error++;
+                    puts("error");
+        dtppm.mixtmp = dtppm.mix;
 ////////////////////////////////////////////////////////////////////////////////
         pthread_mutex_unlock (&my_mutex);
     }
@@ -88,7 +96,7 @@ int     main(void)
     initjsdata(&jsdata);
     initdtppm(&dtppm);
     inittab();
-    sock = initsocket(/*"192.168.42.1"*/"127.0.0.1");
+    sock = initsocket("192.168.42.1"/*"127.0.0.1"*/);
     authentification(sock);
 
 

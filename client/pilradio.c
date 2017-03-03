@@ -33,6 +33,9 @@ void    initdtppm(t_radio *dtppm)
         CHANNEL(i)[8] = '\0';
         i++;
     }
+    PPMOFFS(0) = 162;
+    dtppm->mix = 155;
+    dtppm->mixtmp = 155;
 }
 
 void    jstoppm(t_radio *dtppm, tjs_data *jsdata, tjs_event *jse)
@@ -56,8 +59,7 @@ void    jstoppm(t_radio *dtppm, tjs_data *jsdata, tjs_event *jse)
 
 void    mix(t_radio *dtppm)
 {
-    PPMCHAN(2) = (PPMCHAN(2) - PPMCHAN(5)) / 2 + PPMOFFS(2);
-    printf("%d\n", PPMCHAN(2));
+    dtppm->mix = (PPMCHAN(2) - PPMCHAN(5)) / 1.8 + PPMOFFS(2);
 }
 
 int     trim(tjs_event *jse, tjs_data *jsdata, t_radio *dtppm)

@@ -30,6 +30,8 @@ typedef struct      s_radio
     short           offset[8];
     short           deadzone[6];
     unsigned char   chantosend[8][9];
+    short           mix;
+    short           mixtmp;
 }                   t_radio;
 
 void    initdtppm(t_radio *dtppm);
