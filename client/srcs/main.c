@@ -30,38 +30,46 @@ void inittab()
     tab[11] = strdup("4=0.%03d");
 }
 
+void    listengst(void)
+{
+    int pid;
+
+    if ((pid = fork()) < 0)
+    {
+        puts("fils de fork !");
+        exit (0);
+    }
+    else if (!pid)
+    {
+        system("gst-launch-1.0 udpsrc port=5000 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false");
+        exit (0);
+    }
+}
 
 void    *readcontrol(void *arg)
 {
-    //tjs_event       jse;
-
     while (1)
     {
-        pthread_mutex_lock (&my_mutex);
-////////////////////////////////////////////////////////////////////////////////
         if (readjsevent(&jse))
         {
+            pthread_mutex_lock (&my_mutex);
             if((jsdata.buttons & 0x3f) == 0x3f) // Appuis sur A B X Y LB RB pour quiter
                 exit (0);
             writejsdata(&jse, &jsdata);
             jstoppm(&dtppm, &jsdata, &jse);
             mix(&dtppm);
+            pthread_mutex_unlock (&my_mutex);
         }
-////////////////////////////////////////////////////////////////////////////////
-        pthread_mutex_unlock (&my_mutex);
     }
-    //pthread_exit (0);
 }
 
 void    *sendcontrol(void *arg)
 {
-    //tjs_event       jse;
     int i;
 
     while (1)
     {
         pthread_mutex_lock (&my_mutex);
-////////////////////////////////////////////////////////////////////////////////
         i = -1;
         while (++i < 5)
         {
@@ -70,22 +78,17 @@ void    *sendcontrol(void *arg)
             sprintf(dtppm.chantosend[i], tab[i], dtppm.chantmp[i]);
             if (dtppm.chan[i] != dtppm.chantmp[i])
                     if (send(sock, dtppm.chantosend[i], 9 , 0) < 0)
-                        //error++;
                         puts("error");
             dtppm.chantmp[i] = dtppm.chan[i];
         }
         sprintf(dtppm.chantosend[i], "18=0.%03d", dtppm.mix);
         if (dtppm.mix != dtppm.mixtmp)
                 if (send(sock, dtppm.chantosend[i], 9 , 0) < 0)
-                    //error++;
                     puts("error");
         dtppm.mixtmp = dtppm.mix;
-////////////////////////////////////////////////////////////////////////////////
         pthread_mutex_unlock (&my_mutex);
     }
-    //pthread_exit (0);
 }
-
 
 int     main(void)
 {
@@ -98,23 +101,7 @@ int     main(void)
     inittab();
     sock = initsocket("192.168.42.1"/*"127.0.0.1"*/);
     authentification(sock);
-
-
-
-    int pid;
-    if ((pid = fork()) < 0)
-    {
-        puts("fils de fork !");
-        exit (0);
-    }
-    else if (!pid)
-    {
-        system("gst-launch-1.0 udpsrc port=5000 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false");
-        exit (0);
-    }
-
-
-
+    listengst();
     pthread_mutex_init(&my_mutex, NULL);
     if (pthread_create(&th1, NULL, readcontrol, NULL) < 0)
     {

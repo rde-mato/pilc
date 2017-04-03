@@ -33,15 +33,20 @@ void    initdtppm(t_radio *dtppm)
         CHANNEL(i)[8] = '\0';
         i++;
     }
+
+
     PPMOFFS(0) = 162;
     dtppm->mix = 155;
     dtppm->mixtmp = 155;
+    PPMCREV = 8;
 }
 
 void    jstoppm(t_radio *dtppm, tjs_data *jsdata, tjs_event *jse)
 {
     if (JSET == 2)
     {
+        if (PPMCREV & bitweight(JSEN))
+            JSAXIS(JSEN) = -JSAXIS(JSEN);
         if (JSAXIS(JSEN) < -PPMDDZN(JSEN))
             PPMCHAN(JSEN) = (JSAXIS(JSEN) + PPMDDZN(JSEN))
                             * PPMCRNG(JSEN) + PPMOFFS(JSEN);
